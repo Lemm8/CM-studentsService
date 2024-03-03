@@ -16,12 +16,14 @@ func main() {
 	l := log.New(os.Stdout, "college-manager-api", log.LstdFlags)
 	helloHandler := handlers.NewHello(l)
 	goodbyeHandler := handlers.NewGoodbye(l)
+	studentsHandler := handlers.NewStudents(l)
 
 	// Create ServeMux
 	serveMux := http.NewServeMux()
 	// Register Handlers
 	serveMux.Handle("/", helloHandler)
 	serveMux.Handle("/goodbye", goodbyeHandler)
+	serveMux.Handle("/students", studentsHandler)
 
 	// Create custom server
 	server := http.Server{
