@@ -2,11 +2,12 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 )
 
 type Student struct {
-	ID           string  `json:"id"`
+	ID           int     `json:"id"`
 	Name         string  `json:"name"`
 	MiddleName   string  `json:"middleName"`
 	LastName     string  `json:"lastName"`
@@ -19,21 +20,62 @@ type Student struct {
 	Active       bool    `json:"active"`
 }
 
+// List of Students
 type Students []*Student
 
+// Serialize content of the collection to JSON
 func (students *Students) ToJSON(w io.Writer) error {
 	encoder := json.NewEncoder(w)
 	return encoder.Encode(students)
 }
 
-// Acces data method
+// Pass content of the to JSON
+func (student *Student) FromJSON(r io.Reader) error {
+	decoder := json.NewDecoder(r)
+	return decoder.Decode(student)
+}
+
+// Return local list of students
 func GetStudents() Students {
 	return testsStudentList
 }
 
+func AddStudent(student *Student) {
+	student.ID = getNextId()
+	testsStudentList = append(testsStudentList, student)
+}
+
+var ErrorStudentNotFound = fmt.Errorf("Student Not Found")
+
+func UpdateStudent(id int, student *Student) error {
+	_, pos, err := findStudent(id)
+	if err != nil {
+		return err
+	}
+
+	student.ID = id
+	testsStudentList[pos] = student
+
+	return nil
+}
+
+func findStudent(id int) (*Student, int, error) {
+	for i, student := range testsStudentList {
+		if student.ID == id {
+			return student, i, nil
+		}
+	}
+	return nil, -1, ErrorStudentNotFound
+}
+
+func getNextId() int {
+	return len(testsStudentList) + 1
+}
+
+// Hardcoded list of students
 var testsStudentList = []*Student{
 	{
-		ID:           "ID1",
+		ID:           1,
 		Name:         "Name1",
 		MiddleName:   "MiddleName1",
 		LastName:     "LastName1",
@@ -46,7 +88,7 @@ var testsStudentList = []*Student{
 		Active:       true,
 	},
 	{
-		ID:           "ID2",
+		ID:           2,
 		Name:         "Name2",
 		MiddleName:   "MiddleName2",
 		LastName:     "LastName2",
@@ -59,7 +101,7 @@ var testsStudentList = []*Student{
 		Active:       false,
 	},
 	{
-		ID:           "ID3",
+		ID:           3,
 		Name:         "Name3",
 		MiddleName:   "MiddleName3",
 		LastName:     "LastName3",
@@ -72,7 +114,7 @@ var testsStudentList = []*Student{
 		Active:       true,
 	},
 	{
-		ID:           "ID4",
+		ID:           4,
 		Name:         "Name4",
 		MiddleName:   "MiddleName4",
 		LastName:     "LastName4",

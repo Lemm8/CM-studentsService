@@ -14,16 +14,12 @@ import (
 func main() {
 	// Initialize logger and handlers
 	l := log.New(os.Stdout, "college-manager-api", log.LstdFlags)
-	helloHandler := handlers.NewHello(l)
-	goodbyeHandler := handlers.NewGoodbye(l)
 	studentsHandler := handlers.NewStudents(l)
 
 	// Create ServeMux
 	serveMux := http.NewServeMux()
 	// Register Handlers
-	serveMux.Handle("/", helloHandler)
-	serveMux.Handle("/goodbye", goodbyeHandler)
-	serveMux.Handle("/students", studentsHandler)
+	serveMux.Handle("/", studentsHandler)
 
 	// Create custom server
 	server := http.Server{
@@ -38,7 +34,7 @@ func main() {
 	go func() {
 		err := server.ListenAndServe()
 		if err != nil {
-			l.Fatal(err)
+			l.Fatal("Error: ", err)
 		}
 	}()
 
@@ -54,6 +50,9 @@ func main() {
 	server.ListenAndServe()
 
 	// Graceful shutdown
-	timeoutContext, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	timeoutContext, err := context.WithTimeout(context.Background(), 30*time.Second)
+	if err != nil {
+		l.Fatal("Error: ", err)
+	}
 	server.Shutdown(timeoutContext)
 }
