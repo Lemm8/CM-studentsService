@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -63,14 +64,23 @@ func (students *Students) UpdateStudent(w http.ResponseWriter, r *http.Request) 
 
 type KeyStudent struct{}
 
-func (students Students) MiddlewareStudentsValidation(next http.Handler) http.Handler {
+func (students Students) MiddlewareValidateStudent(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		student := data.Student{}
 
-		// Fill student data from JSON content in the request body
+		// Deserialize student from body
 		err := student.FromJSON(r.Body)
 		if err != nil {
-			http.Error(w, "Student Not Found", http.StatusInternalServerError)
+			students.l.Println("[ERROR] deserializing student", err)
+			http.Error(w, "Error reading student", http.StatusBadRequest)
+			return
+		}
+
+		// Validate student
+		err = student.Validate()
+		if err != nil {
+			students.l.Println("[ERROR] validating student", err)
+			http.Error(w, fmt.Sprintf("Error validating student: %s", err), http.StatusBadRequest)
 			return
 		}
 
