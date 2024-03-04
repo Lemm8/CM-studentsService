@@ -9,17 +9,26 @@ import (
 	"time"
 
 	"github.com/Lemm8/CollegeManager/handlers"
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	// Initialize logger and handlers
 	l := log.New(os.Stdout, "college-manager-api", log.LstdFlags)
 	studentsHandler := handlers.NewStudents(l)
 
 	// Create ServeMux
-	serveMux := http.NewServeMux()
-	// Register Handlers
-	serveMux.Handle("/", studentsHandler)
+	serveMux := mux.NewRouter()
+
+	getRouter := serveMux.Methods("GET").Subrouter()
+	getRouter.HandleFunc("/", studentsHandler.GetStudents)
+
+	postRouter := serveMux.Methods("POST").Subrouter()
+	postRouter.HandleFunc("/", studentsHandler.AddStudent)
+	postRouter.Use(studentsHandler.MiddlewareStudentsValidation)
+
+	putRouter := serveMux.Methods("PUT").Subrouter()
+	putRouter.HandleFunc("/{id:[0-9]+}", studentsHandler.UpdateStudent)
+	putRouter.Use(studentsHandler.MiddlewareStudentsValidation)
 
 	// Create custom server
 	server := http.Server{
