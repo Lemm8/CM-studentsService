@@ -24,11 +24,11 @@ func main() {
 
 	postRouter := serveMux.Methods("POST").Subrouter()
 	postRouter.HandleFunc("/", studentsHandler.AddStudent)
-	postRouter.Use(studentsHandler.MiddlewareStudentsValidation)
+	postRouter.Use(studentsHandler.MiddlewareValidateStudent)
 
 	putRouter := serveMux.Methods("PUT").Subrouter()
 	putRouter.HandleFunc("/{id:[0-9]+}", studentsHandler.UpdateStudent)
-	putRouter.Use(studentsHandler.MiddlewareStudentsValidation)
+	putRouter.Use(studentsHandler.MiddlewareValidateStudent)
 
 	// Create custom server
 	server := http.Server{

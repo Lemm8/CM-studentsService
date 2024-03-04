@@ -4,20 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type Student struct {
-	ID           int     `json:"id"`
-	Name         string  `json:"name"`
-	MiddleName   string  `json:"middleName"`
-	LastName     string  `json:"lastName"`
-	Email        string  `json:"email"`
-	Cellphone    string  `json:"cellphone"`
-	GPA          float32 `json:"gpa"`
-	TotalCredits int     `json:"totalCredits"`
+	ID           int     `json:"id" validate:"required"`
+	Name         string  `json:"name" validate:"required"`
+	MiddleName   string  `json:"middleName" validate:"required"`
+	LastName     string  `json:"lastName" validate:"required"`
+	Birthdate    string  `json:"birthdate" validate:"required,validBirthdate"`
+	Email        string  `json:"email" validate:"required,email"`
+	Cellphone    string  `json:"cellphone" validate:"required,max=15"`
+	GPA          float32 `json:"gpa" validate:"required,gte=0,lte=100"`
+	TotalCredits int     `json:"totalCredits" validate:"required,gte=0"`
 	JoinedOn     string  `json:"-"`
 	GraduatedOn  string  `json:"-"`
-	Active       bool    `json:"active"`
+	Active       bool    `json:"active" validate:"required"`
 }
 
 // List of Students
@@ -29,13 +33,23 @@ func (students *Students) ToJSON(w io.Writer) error {
 	return encoder.Encode(students)
 }
 
+func (student *Student) Validate() error {
+	validate := validator.New()
+	validate.RegisterValidation("validBirthdate", validBirthdate)
+	return validate.Struct(student)
+}
+
+func validBirthdate(fl validator.FieldLevel) bool {
+	_, err := time.Parse("01/02/2006", fl.Field().String())
+	return err == nil
+}
+
 // Pass content of the to JSON
 func (student *Student) FromJSON(r io.Reader) error {
 	decoder := json.NewDecoder(r)
 	return decoder.Decode(student)
 }
 
-// Return local list of students
 func GetStudents() Students {
 	return testsStudentList
 }
@@ -79,6 +93,7 @@ var testsStudentList = []*Student{
 		Name:         "Name1",
 		MiddleName:   "MiddleName1",
 		LastName:     "LastName1",
+		Birthdate:    "10/10/1999",
 		Email:        "email1@test.com",
 		Cellphone:    "6121112113",
 		GPA:          4.5,
@@ -92,6 +107,7 @@ var testsStudentList = []*Student{
 		Name:         "Name2",
 		MiddleName:   "MiddleName2",
 		LastName:     "LastName2",
+		Birthdate:    "11/07/2001",
 		Email:        "email2@test.com",
 		Cellphone:    "6129284051",
 		GPA:          4.0,
@@ -105,6 +121,7 @@ var testsStudentList = []*Student{
 		Name:         "Name3",
 		MiddleName:   "MiddleName3",
 		LastName:     "LastName3",
+		Birthdate:    "05/01/2002",
 		Email:        "email3@test.com",
 		Cellphone:    "6120294756",
 		GPA:          3.5,
@@ -118,6 +135,7 @@ var testsStudentList = []*Student{
 		Name:         "Name4",
 		MiddleName:   "MiddleName4",
 		LastName:     "LastName4",
+		Birthdate:    "11/08/2001",
 		Email:        "email4@test.com",
 		Cellphone:    "6120394850",
 		GPA:          4.5,
