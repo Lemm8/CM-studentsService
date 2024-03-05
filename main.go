@@ -14,13 +14,15 @@ import (
 
 func main() {
 	l := log.New(os.Stdout, "college-manager-api", log.LstdFlags)
-	studentsHandler := handlers.NewStudents(l)
+	// Create handler
+	studentsHandler := handlers.NewStudentsHandler(l)
 
-	// Create ServeMux
+	// Create ServeMux and register handlers
 	serveMux := mux.NewRouter()
 
 	getRouter := serveMux.Methods("GET").Subrouter()
 	getRouter.HandleFunc("/", studentsHandler.GetStudents)
+	getRouter.HandleFunc("/{id:[0-9]+}", studentsHandler.GetStudent)
 
 	postRouter := serveMux.Methods("POST").Subrouter()
 	postRouter.HandleFunc("/", studentsHandler.AddStudent)
