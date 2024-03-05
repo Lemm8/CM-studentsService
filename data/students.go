@@ -87,6 +87,15 @@ func UpdateStudent(id int, student *Student) error {
 	return nil
 }
 
+func DeleteStudent(id int) error {
+	_, pos, err := findStudent(id)
+	if err != nil {
+		return err
+	}
+	testsStudentList = append(testsStudentList[:pos], testsStudentList[pos+1:]...)
+	return nil
+}
+
 func findStudent(id int) (*Student, int, error) {
 	for i, student := range testsStudentList {
 		if student.ID == id {

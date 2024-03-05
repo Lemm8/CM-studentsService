@@ -32,6 +32,9 @@ func main() {
 	putRouter.HandleFunc("/{id:[0-9]+}", studentsHandler.UpdateStudent)
 	putRouter.Use(studentsHandler.MiddlewareValidateStudent)
 
+	deleteRouter := serveMux.Methods("DELETE").Subrouter()
+	deleteRouter.HandleFunc("/{id:[0-9]+}", studentsHandler.DeleteStudent)
+
 	// Create custom server
 	server := http.Server{
 		Addr:         "127.0.0.1:9090",
