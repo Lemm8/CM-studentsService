@@ -1,0 +1,12 @@
+basePath: /
+consumes:
+    - application/json
+info:
+    description: Documentation for Students API
+    title: os Students API
+paths: {}
+produces:
+    - application/json
+schemes:
+    - http
+swagger: "2.0"

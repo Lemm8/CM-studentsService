@@ -1,3 +1,18 @@
+// Package Classification os Students API
+//
+// Documentation for Students API
+//
+//	Schemes: http
+//	BasePath: /
+//	Version 1.0.0
+//
+//	Consumes:
+//	-application/json
+//
+//	Produces:
+//	-application/json
+//
+// swagger:meta
 package handlers
 
 import (
@@ -16,7 +31,7 @@ type Students struct {
 }
 
 // Create a students handler with a given logger (dependency injection)
-func NewStudents(l *log.Logger) *Students {
+func NewStudentsHandler(l *log.Logger) *Students {
 	return &Students{l}
 }
 
@@ -28,6 +43,34 @@ func (students *Students) GetStudents(w http.ResponseWriter, r *http.Request) {
 
 	// Serialize list to json
 	err := testStudentsList.ToJSON(w)
+	if err != nil {
+		http.Error(w, "Unable to Marshal JSON", http.StatusInternalServerError)
+	}
+}
+
+// Return student base on ID
+func (students *Students) GetStudent(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Unable to convert to id ", http.StatusBadRequest)
+		return
+	}
+
+	students.l.Println("Handle GET ID Student")
+
+	student, err := data.GetStudent(id)
+
+	if err == data.ErrorStudentNotFound {
+		http.Error(w, "Student Not Found", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, "Student Not Found", http.StatusInternalServerError)
+		return
+	}
+
+	err = student.ToJSON(w)
 	if err != nil {
 		http.Error(w, "Unable to Marshal JSON", http.StatusInternalServerError)
 	}

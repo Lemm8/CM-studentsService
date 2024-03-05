@@ -33,6 +33,12 @@ func (students *Students) ToJSON(w io.Writer) error {
 	return encoder.Encode(students)
 }
 
+// Serialize single student to JSON
+func (student *Student) ToJSON(w io.Writer) error {
+	encoder := json.NewEncoder(w)
+	return encoder.Encode(student)
+}
+
 func (student *Student) Validate() error {
 	validate := validator.New()
 	validate.RegisterValidation("validBirthdate", validBirthdate)
@@ -52,6 +58,14 @@ func (student *Student) FromJSON(r io.Reader) error {
 
 func GetStudents() Students {
 	return testsStudentList
+}
+
+func GetStudent(id int) (*Student, error) {
+	foundStudent, _, err := findStudent(id)
+	if err != nil {
+		return nil, err
+	}
+	return foundStudent, nil
 }
 
 func AddStudent(student *Student) {
