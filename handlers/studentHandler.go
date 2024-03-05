@@ -105,6 +105,27 @@ func (students *Students) UpdateStudent(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+func (students *Students) DeleteStudent(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Unable to convert to id ", http.StatusBadRequest)
+		return
+	}
+
+	students.l.Println("Handle DELETE Student")
+
+	err = data.DeleteStudent(id)
+	if err == data.ErrorStudentNotFound {
+		http.Error(w, "Student Not Found", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, "Student Not Found", http.StatusInternalServerError)
+		return
+	}
+}
+
 type KeyStudent struct{}
 
 func (students Students) MiddlewareValidateStudent(next http.Handler) http.Handler {
