@@ -1,4 +1,4 @@
-// Package Classification os Students API
+// Package Classification Students API
 //
 // Documentation for Students API
 //

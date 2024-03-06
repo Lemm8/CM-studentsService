@@ -8,6 +8,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// swagger:route PUT /students/{id} Students updateStudent
+// Updates the information of a student
+// responses:
+//
+//	201: noContent
 func (students *Students) UpdateStudent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])

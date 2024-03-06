@@ -8,6 +8,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// swagger:route DELETE /students/{id} Students deleteStudent
+// Delete a student
+// responses:
+// 	201: noContent
+
 func (students *Students) DeleteStudent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
