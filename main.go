@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Lemm8/CollegeManager/handlers"
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 )
 
@@ -34,6 +35,11 @@ func main() {
 
 	deleteRouter := serveMux.Methods("DELETE").Subrouter()
 	deleteRouter.HandleFunc("/{id:[0-9]+}", studentsHandler.DeleteStudent)
+
+	ops := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	docsMiddleware := middleware.Redoc(ops, nil)
+	getRouter.Handle("/docs", docsMiddleware)
+	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
 	// Create custom server
 	server := http.Server{

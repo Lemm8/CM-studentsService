@@ -9,11 +9,29 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// swagger:model
 type Student struct {
-	ID           int     `json:"id" validate:"required"`
-	Name         string  `json:"name" validate:"required"`
-	MiddleName   string  `json:"middleName" validate:"required"`
-	LastName     string  `json:"lastName" validate:"required"`
+	// The id of the student
+	//
+	// required:true
+	// min:1
+	ID int `json:"id" validate:"required"`
+	// The name of the student
+	//
+	// required:true
+	Name string `json:"name" validate:"required"`
+	// The middle name of the student
+	//
+	// required:false
+	MiddleName string `json:"middleName" validate:"required"`
+	// The last name of the student
+	//
+	// required:true
+	LastName string `json:"lastName" validate:"required"`
+	// The birthdate of the student
+	//
+	// required:true
+	// pattern:DD/MM/YYYY
 	Birthdate    string  `json:"birthdate" validate:"required,validBirthdate"`
 	Email        string  `json:"email" validate:"required,email"`
 	Cellphone    string  `json:"cellphone" validate:"required,max=15"`

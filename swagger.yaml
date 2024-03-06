@@ -1,12 +1,117 @@
 basePath: /
 consumes:
     - application/json
+definitions:
+    Student:
+        properties:
+            active:
+                type: boolean
+                x-go-name: Active
+            birthdate:
+                description: The birthdate of the student
+                pattern: DD/MM/YYYY
+                type: string
+                x-go-name: Birthdate
+            cellphone:
+                type: string
+                x-go-name: Cellphone
+            email:
+                type: string
+                x-go-name: Email
+            gpa:
+                format: float
+                type: number
+                x-go-name: GPA
+            id:
+                description: The id of the student
+                format: int64
+                minimum: 1
+                type: integer
+                x-go-name: ID
+            lastName:
+                description: The last name of the student
+                type: string
+                x-go-name: LastName
+            middleName:
+                description: The middle name of the student
+                type: string
+                x-go-name: MiddleName
+            name:
+                description: The name of the student
+                type: string
+                x-go-name: Name
+            totalCredits:
+                format: int64
+                type: integer
+                x-go-name: TotalCredits
+        required:
+            - id
+            - name
+            - lastName
+            - birthdate
+        type: object
+        x-go-package: github.com/Lemm8/CollegeManager/data
 info:
     description: Documentation for Students API
-    title: os Students API
-paths: {}
+    title: Students API
+paths:
+    /students:
+        get:
+            description: Returns a list of students
+            operationId: listStudents
+            responses:
+                "200":
+                    $ref: '#/responses/studentsResponse'
+            tags:
+                - Students
+        post:
+            description: Registers a student
+            operationId: addStudent
+            responses:
+                "201":
+                    $ref: '#/responses/noContent'
+            tags:
+                - Students
+    /students/{id}:
+        delete:
+            description: Delete a student
+            operationId: deleteStudent
+            responses:
+                "201":
+                    $ref: '#/responses/noContent'
+            tags:
+                - Students
+        get:
+            description: Return a student
+            operationId: getStudent
+            responses:
+                "200":
+                    $ref: '#/responses/studentResponse'
+            tags:
+                - Students
+        put:
+            description: Updates the information of a student
+            operationId: updateStudent
+            responses:
+                "201":
+                    $ref: '#/responses/noContent'
+            tags:
+                - Students
 produces:
     - application/json
+responses:
+    noContent:
+        description: ""
+    studentResponse:
+        description: Single student
+        schema:
+            $ref: '#/definitions/Student'
+    studentsResponse:
+        description: List of students
+        schema:
+            items:
+                $ref: '#/definitions/Student'
+            type: array
 schemes:
     - http
 swagger: "2.0"
