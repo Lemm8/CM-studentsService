@@ -62,6 +62,10 @@ paths:
             responses:
                 "200":
                     $ref: '#/responses/studentsResponse'
+                "404":
+                    $ref: '#/responses/errorResponse'
+                "500":
+                    $ref: '#/responses/errorResponse'
             tags:
                 - Students
         post:
@@ -69,7 +73,9 @@ paths:
             operationId: addStudent
             responses:
                 "201":
-                    $ref: '#/responses/noContent'
+                    $ref: '#/responses/created'
+                "500":
+                    $ref: '#/responses/errorResponse'
             tags:
                 - Students
     /students/{id}:
@@ -77,8 +83,12 @@ paths:
             description: Delete a student
             operationId: deleteStudent
             responses:
-                "201":
+                "204":
                     $ref: '#/responses/noContent'
+                "404":
+                    $ref: '#/responses/errorResponse'
+                "500":
+                    $ref: '#/responses/errorResponse'
             tags:
                 - Students
         get:
@@ -87,21 +97,33 @@ paths:
             responses:
                 "200":
                     $ref: '#/responses/studentResponse'
+                "404":
+                    $ref: '#/responses/errorResponse'
+                "500":
+                    $ref: '#/responses/errorResponse'
             tags:
                 - Students
         put:
             description: Updates the information of a student
             operationId: updateStudent
             responses:
-                "201":
+                "204":
                     $ref: '#/responses/noContent'
+                "404":
+                    $ref: '#/responses/errorResponse'
+                "500":
+                    $ref: '#/responses/errorResponse'
             tags:
                 - Students
 produces:
     - application/json
 responses:
+    created:
+        description: Student Reigstered
+    errorResponse:
+        description: Generic error response
     noContent:
-        description: ""
+        description: No Content Response
     studentResponse:
         description: Single student
         schema:
