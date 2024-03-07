@@ -14,6 +14,8 @@ import (
 // responses:
 //
 //	200:studentsResponse
+//	404: errorResponse
+//	500: errorResponse
 func (students *Students) GetStudents(w http.ResponseWriter, r *http.Request) {
 	students.l.Println("Handle GET Students")
 	// Fetch students from data source
@@ -32,6 +34,8 @@ func (students *Students) GetStudents(w http.ResponseWriter, r *http.Request) {
 // responses:
 //
 //	200:studentResponse
+//	404: errorResponse
+//	500: errorResponse
 func (students *Students) GetStudent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])

@@ -9,11 +9,13 @@ import (
 // swagger:route POST /students Students addStudent
 // Registers a student
 // responses:
-// 	201: noContent
-
+//
+//	201: created
+//	500: errorResponse
 func (students *Students) AddStudent(w http.ResponseWriter, r *http.Request) {
 	students.l.Println("Handle POST Students")
 
 	student := r.Context().Value(KeyStudent{}).(data.Student)
 	data.AddStudent(&student)
+	w.WriteHeader(http.StatusCreated)
 }

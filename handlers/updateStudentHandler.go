@@ -12,7 +12,9 @@ import (
 // Updates the information of a student
 // responses:
 //
-//	201: noContent
+//	204: noContent
+//	404: errorResponse
+//	500: errorResponse
 func (students *Students) UpdateStudent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -33,4 +35,6 @@ func (students *Students) UpdateStudent(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Student Not Found", http.StatusInternalServerError)
 		return
 	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
