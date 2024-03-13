@@ -8,9 +8,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// GetStudents returns the list of registred students from the data source (local list for now)
 // swagger:route GET /students Students listStudents
-// Returns a list of students
+// GetStudents returns the list of registred students from the data source (local list for now)
 // responses:
 //
 //	200:studentsResponse
@@ -28,9 +27,8 @@ func (students *Students) GetStudents(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Return student base on ID
 // swagger:route GET /students/{id} Students getStudent
-// Return a student
+// Return student base on ID
 // responses:
 //
 //	200:studentResponse

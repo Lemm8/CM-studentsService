@@ -1,6 +1,6 @@
 package params
 
-// swagger:parameters deleteProduct
+// swagger:parameters getStudent updateStudent deleteStudent
 type StudentIDParameterWrapper struct {
 	// The id from the student
 	// in: path
