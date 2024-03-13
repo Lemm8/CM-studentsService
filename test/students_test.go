@@ -1,9 +1,13 @@
 package data
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/Lemm8/CollegeManager/data"
+)
 
 func TestChecksValidation(t *testing.T) {
-	student := Student{
+	student := data.Student{
 		ID:           5,
 		Name:         "Name5",
 		MiddleName:   "MiddleName5",
