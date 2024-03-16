@@ -8,16 +8,21 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/Lemm8/CollegeManager/db"
 	"github.com/Lemm8/CollegeManager/handlers"
 	"github.com/go-openapi/runtime/middleware"
 	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	l := log.New(os.Stdout, "college-manager-api", log.LstdFlags)
 	// Create handler
 	studentsHandler := handlers.NewStudentsHandler(l)
+
+	// Load env variables
+	godotenv.Load()
 
 	// Create ServeMux and register handlers
 	serveMux := mux.NewRouter()
@@ -44,6 +49,22 @@ func main() {
 
 	// CORS
 	corsHandler := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"http://localhost:3000"}))
+
+	// Connect to database
+	conn, err := db.ConnectDatabase()
+	if err != nil {
+		l.Println("Error: ", err)
+	}
+
+	defer conn.Close(context.Background())
+
+	var greeting string
+	err = conn.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
+	if err != nil {
+		l.Printf("QueryRow failed: %v\n", err)
+	}
+
+	l.Println(greeting)
 
 	// Create custom server
 	server := http.Server{
@@ -74,9 +95,7 @@ func main() {
 	server.ListenAndServe()
 
 	// Graceful shutdown
-	timeoutContext, err := context.WithTimeout(context.Background(), 30*time.Second)
-	if err != nil {
-		l.Fatal("Error: ", err)
-	}
-	server.Shutdown(timeoutContext)
+	// gracefully shutdown the server, waiting max 30 seconds for current operations to complete
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	server.Shutdown(ctx)
 }
