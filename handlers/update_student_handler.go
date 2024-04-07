@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/Lemm8/CollegeManager/data"
 	"github.com/gorilla/mux"
@@ -17,8 +16,8 @@ import (
 //	500: errorResponse
 func (students *Students) UpdateStudent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
+	id, err := vars["id"]
+	if err {
 		http.Error(w, "Unable to convert to id ", http.StatusBadRequest)
 		return
 	}
@@ -26,12 +25,12 @@ func (students *Students) UpdateStudent(w http.ResponseWriter, r *http.Request) 
 	students.l.Println("Handle PUT Students")
 	student := r.Context().Value(KeyStudent{}).(data.Student)
 
-	err = data.UpdateStudent(id, &student)
-	if err == data.ErrorStudentNotFound {
+	errStudent := data.UpdateStudent(id, &student)
+	if errStudent != nil && errStudent == data.ErrorStudentNotFound {
 		http.Error(w, "Student Not Found", http.StatusNotFound)
 		return
 	}
-	if err != nil {
+	if errStudent != nil && errStudent != data.ErrorStudentNotFound {
 		http.Error(w, "Student Not Found", http.StatusInternalServerError)
 		return
 	}

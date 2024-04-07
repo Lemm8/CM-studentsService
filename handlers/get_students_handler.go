@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/Lemm8/CollegeManager/data"
 	"github.com/gorilla/mux"
@@ -18,7 +17,7 @@ import (
 func (students *Students) GetStudents(w http.ResponseWriter, r *http.Request) {
 	students.l.Println("Handle GET Students")
 	// Fetch students from data source
-	testStudentsList := data.GetStudents()
+	testStudentsList := data.GetStudents(students.conn, students.l)
 
 	// Serialize list to json
 	err := testStudentsList.ToJSON(w)
@@ -36,27 +35,27 @@ func (students *Students) GetStudents(w http.ResponseWriter, r *http.Request) {
 //	500: errorResponse
 func (students *Students) GetStudent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
+	id, err := vars["id"]
+	if err {
 		http.Error(w, "Unable to convert to id ", http.StatusBadRequest)
 		return
 	}
 
 	students.l.Println("Handle GET ID Student")
 
-	student, err := data.GetStudent(id)
+	student, errStudent := data.GetStudent(id)
 
-	if err == data.ErrorStudentNotFound {
+	if errStudent != nil && errStudent == data.ErrorStudentNotFound {
 		http.Error(w, "Student Not Found", http.StatusNotFound)
 		return
 	}
-	if err != nil {
+	if errStudent != nil && errStudent != data.ErrorStudentNotFound {
 		http.Error(w, "Student Not Found", http.StatusInternalServerError)
 		return
 	}
 
-	err = student.ToJSON(w)
-	if err != nil {
+	errStudent = student.ToJSON(w)
+	if errStudent != nil {
 		http.Error(w, "Unable to Marshal JSON", http.StatusInternalServerError)
 	}
 }
