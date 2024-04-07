@@ -23,15 +23,17 @@ import (
 	"net/http"
 
 	"github.com/Lemm8/CollegeManager/data"
+	"github.com/jackc/pgx/v5"
 )
 
 type Students struct {
-	l *log.Logger
+	l    *log.Logger
+	conn *pgx.Conn
 }
 
 // Create a students handler with a given logger (dependency injection)
-func NewStudentsHandler(l *log.Logger) *Students {
-	return &Students{l}
+func NewStudentsHandler(l *log.Logger, conn *pgx.Conn) *Students {
+	return &Students{l, conn}
 }
 
 type KeyStudent struct{}

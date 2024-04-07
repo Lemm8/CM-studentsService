@@ -18,8 +18,25 @@ import (
 
 func main() {
 	l := log.New(os.Stdout, "college-manager-api", log.LstdFlags)
+
+	// Connect to database
+	conn, err := db.ConnectDatabase()
+	if err != nil {
+		l.Println("Error: ", err)
+	}
+
+	defer conn.Close(context.Background())
+
+	var greeting string
+	err = conn.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
+	if err != nil {
+		l.Printf("QueryRow failed: %v\n", err)
+	}
+
+	l.Println(greeting)
+
 	// Create handler
-	studentsHandler := handlers.NewStudentsHandler(l)
+	studentsHandler := handlers.NewStudentsHandler(l, conn)
 
 	// Load env variables
 	godotenv.Load()
@@ -49,22 +66,6 @@ func main() {
 
 	// CORS
 	corsHandler := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"http://localhost:3000"}))
-
-	// Connect to database
-	conn, err := db.ConnectDatabase()
-	if err != nil {
-		l.Println("Error: ", err)
-	}
-
-	defer conn.Close(context.Background())
-
-	var greeting string
-	err = conn.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
-	if err != nil {
-		l.Printf("QueryRow failed: %v\n", err)
-	}
-
-	l.Println(greeting)
 
 	// Create custom server
 	server := http.Server{

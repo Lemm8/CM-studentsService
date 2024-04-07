@@ -1,12 +1,16 @@
 package data
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
+	"strconv"
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5"
 )
 
 // swagger:model
@@ -15,35 +19,51 @@ type Student struct {
 	//
 	// required:true
 	// min:1
-	ID int `json:"id" validate:"required"`
+	ID string `json:"id" validate:"required" db:"id"`
 	// The name of the student
 	//
 	// required:true
-	Name string `json:"name" validate:"required"`
+	Name string `json:"name" validate:"required" db:"name"`
 	// The middle name of the student
 	//
 	// required:false
-	MiddleName string `json:"middleName" validate:"required"`
-	// The last name of the student
+	MiddleName *string `json:"middleName" db:"middle_name"`
+	// The first last name of the student
 	//
 	// required:true
-	LastName string `json:"lastName" validate:"required"`
+	FirstLastName string `json:"firstLastName" validate:"required" db:"first_last_name"`
+	// The second last name of the student
+	//
+	// required:true
+	SecondLastName string `json:"secondLastName" validate:"required" db:"second_last_name"`
 	// The birthdate of the student
 	//
 	// required:true
 	// pattern:DD/MM/YYYY
-	Birthdate    string  `json:"birthdate" validate:"required,validBirthdate"`
-	Email        string  `json:"email" validate:"required,email"`
-	Cellphone    string  `json:"cellphone" validate:"required,max=15"`
-	GPA          float32 `json:"gpa" validate:"required,gte=0,lte=100"`
-	TotalCredits int     `json:"totalCredits" validate:"required,gte=0"`
-	JoinedOn     string  `json:"-"`
-	GraduatedOn  string  `json:"-"`
-	Active       bool    `json:"active" validate:"required"`
+	Birthdate time.Time `json:"birthdate" validate:"required,validBirthdate" db:"birthdate"`
+	// The email of the student
+	//
+	// required:true
+	// pattern:email
+	Email string `json:"email" validate:"required,email" db:"email"`
+	// The cellphone of the student
+	//
+	// required:true
+	// pattern:numeric only and no more than 15 digits
+	Cellphone    string     `json:"cellphone" validate:"required,max=15" db:"cellphone"`
+	Nationality  string     `json:"nationality" validate:"required" db:"nationality"`
+	GPA          float32    `json:"gpa" validate:"required,gte=0,lte=100" db:"gpa"`
+	TotalCredits int        `json:"totalCredits" validate:"required,gte=0" db:"credits"`
+	Scolarship   string     `json:"scolarship" validate:"required" db:"scolarship"`
+	GraduatedOn  *time.Time `json:"-" db:"graduated_on"`
+	JoinedOn     time.Time  `json:"-" db:"created_at"`
+	UpdatedAt    time.Time  `json:"-" validate:"required" db:"updated_at"`
+	Status       *int8      `json:"status" validate:"required" db:"status"`
+	Major        string     `json:"major" validate:"required" db:"major"`
 }
 
 // List of Students
-type Students []*Student
+type Students []Student
 
 // Serialize content of the collection to JSON
 func (students *Students) ToJSON(w io.Writer) error {
@@ -74,11 +94,21 @@ func (student *Student) FromJSON(r io.Reader) error {
 	return decoder.Decode(student)
 }
 
-func GetStudents() Students {
-	return testsStudentList
+func GetStudents(conn *pgx.Conn, l *log.Logger) Students {
+
+	rows, err := conn.Query(context.Background(), `SELECT * FROM student`)
+	if err != nil {
+		l.Printf("QueryRow failed: %v\n", err)
+	}
+
+	students, err := pgx.CollectRows(rows, pgx.RowToStructByName[Student])
+	if err != nil {
+		l.Printf("CollectRows failed: %v\n", err)
+	}
+	return students
 }
 
-func GetStudent(id int) (*Student, error) {
+func GetStudent(id string) (*Student, error) {
 	foundStudent, _, err := findStudent(id)
 	if err != nil {
 		return nil, err
@@ -93,7 +123,7 @@ func AddStudent(student *Student) {
 
 var ErrorStudentNotFound = fmt.Errorf("Student Not Found")
 
-func UpdateStudent(id int, student *Student) error {
+func UpdateStudent(id string, student *Student) error {
 	_, pos, err := findStudent(id)
 	if err != nil {
 		return err
@@ -105,7 +135,7 @@ func UpdateStudent(id int, student *Student) error {
 	return nil
 }
 
-func DeleteStudent(id int) error {
+func DeleteStudent(id string) error {
 	_, pos, err := findStudent(id)
 	if err != nil {
 		return err
@@ -114,7 +144,7 @@ func DeleteStudent(id int) error {
 	return nil
 }
 
-func findStudent(id int) (*Student, int, error) {
+func findStudent(id string) (*Student, int, error) {
 	for i, student := range testsStudentList {
 		if student.ID == id {
 			return student, i, nil
@@ -123,66 +153,70 @@ func findStudent(id int) (*Student, int, error) {
 	return nil, -1, ErrorStudentNotFound
 }
 
-func getNextId() int {
-	return len(testsStudentList) + 1
+func getNextId() string {
+	return strconv.Itoa(len(testsStudentList) + 1)
 }
 
 // Hardcoded list of students
 var testsStudentList = []*Student{
 	{
-		ID:           1,
-		Name:         "Name1",
-		MiddleName:   "MiddleName1",
-		LastName:     "LastName1",
-		Birthdate:    "10/10/1999",
-		Email:        "email1@test.com",
-		Cellphone:    "6121112113",
-		GPA:          4.5,
-		TotalCredits: 10,
-		JoinedOn:     "June 2018",
-		GraduatedOn:  "",
-		Active:       true,
-	},
-	{
-		ID:           2,
-		Name:         "Name2",
-		MiddleName:   "MiddleName2",
-		LastName:     "LastName2",
-		Birthdate:    "11/07/2001",
-		Email:        "email2@test.com",
-		Cellphone:    "6129284051",
-		GPA:          4.0,
-		TotalCredits: 13,
-		JoinedOn:     "June 2018",
-		GraduatedOn:  "June 2023",
-		Active:       false,
-	},
-	{
-		ID:           3,
-		Name:         "Name3",
-		MiddleName:   "MiddleName3",
-		LastName:     "LastName3",
-		Birthdate:    "05/01/2002",
-		Email:        "email3@test.com",
-		Cellphone:    "6120294756",
-		GPA:          3.5,
-		TotalCredits: 8,
-		JoinedOn:     "June 2018",
-		GraduatedOn:  "",
-		Active:       true,
-	},
-	{
-		ID:           4,
-		Name:         "Name4",
-		MiddleName:   "MiddleName4",
-		LastName:     "LastName4",
-		Birthdate:    "11/08/2001",
-		Email:        "email4@test.com",
-		Cellphone:    "6120394850",
-		GPA:          4.5,
-		TotalCredits: 10,
-		JoinedOn:     "June 2018",
-		GraduatedOn:  "",
-		Active:       true,
+		// 	ID:             "1",
+		// 	Name:           "Name1",
+		// 	MiddleName:     "MiddleName1",
+		// 	FirstLastName:  "FirstLastName1",
+		// 	SecondLastName: "SecondLastName1",
+		// 	Birthdate:      "10/10/1999",
+		// 	Email:        "email1@test.com",
+		// 	Cellphone:    "6121112113",
+		// 	GPA:          4.5,
+		// 	TotalCredits: 10,
+		// 	JoinedOn:     "June 2018",
+		// 	GraduatedOn:  "",
+		// 	Status: true,
+		// },
+		// {
+		// 	ID:             "2",
+		// 	Name:           "Name2",
+		// 	MiddleName:     "MiddleName2",
+		// 	FirstLastName:  "FirstLastName2",
+		// 	SecondLastName: "FirstLastName2",
+		// 	Birthdate:      "08/11/2001",
+		// 	Email:        "email2@test.com",
+		// 	Cellphone:    "6465910237",
+		// 	GPA:          4.5,
+		// 	TotalCredits: 10,
+		// 	JoinedOn:     "June 2018",
+		// 	GraduatedOn:  "",
+		// 	Status: true,
+		// },
+		// {
+		// 	ID:             "3",
+		// 	Name:           "Name3",
+		// 	MiddleName:     "MiddleName3",
+		// 	FirstLastName:  "FirstLastName3",
+		// 	SecondLastName: "FirstLastName3",
+		// 	Birthdate:      "01/03/2003",
+		// 	Email:        "email3@test.com",
+		// 	Cellphone:    "6123947581",
+		// 	GPA:          4.5,
+		// 	TotalCredits: 10,
+		// 	JoinedOn:     "June 2018",
+		// 	GraduatedOn:  "",
+		// 	Status: true,
+		// },
+		// {
+		// 	ID:             "4",
+		// 	Name:           "Name4",
+		// 	MiddleName:     "MiddleName4",
+		// 	FirstLastName:  "FirstLastName4",
+		// 	SecondLastName: "FirstLastName4",
+		// 	Birthdate:      "11/10/2000",
+		// 	Email:        "email4@test.com",
+		// 	Cellphone:    "61239405729",
+		// 	GPA:          4.5,
+		// 	TotalCredits: 10,
+		// 	JoinedOn:     "June 2018",
+		// 	GraduatedOn:  "",
+		// 	Status: true,
 	},
 }
