@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Lemm8/CollegeManager/scanner"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5"
 )
@@ -27,7 +28,7 @@ type Student struct {
 	// The middle name of the student
 	//
 	// required:false
-	MiddleName *string `json:"middleName" db:"middle_name"`
+	MiddleName scanner.NullString `json:"middleName" db:"middle_name"`
 	// The first last name of the student
 	//
 	// required:true
@@ -40,7 +41,7 @@ type Student struct {
 	//
 	// required:true
 	// pattern:DD/MM/YYYY
-	Birthdate time.Time `json:"birthdate" validate:"required,validBirthdate" db:"birthdate"`
+	Birthdate scanner.NullTime `json:"birthdate" validate:"required,validBirthdate" db:"birthdate"`
 	// The email of the student
 	//
 	// required:true
@@ -50,16 +51,16 @@ type Student struct {
 	//
 	// required:true
 	// pattern:numeric only and no more than 15 digits
-	Cellphone    string     `json:"cellphone" validate:"required,max=15" db:"cellphone"`
-	Nationality  string     `json:"nationality" validate:"required" db:"nationality"`
-	GPA          float32    `json:"gpa" validate:"required,gte=0,lte=100" db:"gpa"`
-	TotalCredits int        `json:"totalCredits" validate:"required,gte=0" db:"credits"`
-	Scolarship   string     `json:"scolarship" validate:"required" db:"scolarship"`
-	GraduatedOn  *time.Time `json:"-" db:"graduated_on"`
-	JoinedOn     time.Time  `json:"-" db:"created_at"`
-	UpdatedAt    time.Time  `json:"-" validate:"required" db:"updated_at"`
-	Status       *int8      `json:"status" validate:"required" db:"status"`
-	Major        string     `json:"major" validate:"required" db:"major"`
+	Cellphone    string            `json:"cellphone" validate:"required,max=15" db:"cellphone"`
+	Nationality  string            `json:"nationality" validate:"required" db:"nationality"`
+	GPA          float32           `json:"gpa" validate:"required,gte=0,lte=100" db:"gpa"`
+	TotalCredits int               `json:"totalCredits" validate:"required,gte=0" db:"credits"`
+	Scolarship   string            `json:"scolarship" validate:"required" db:"scolarship"`
+	GraduatedOn  scanner.NullTime  `json:"-" db:"graduated_on"`
+	JoinedOn     time.Time         `json:"-" db:"created_at"`
+	UpdatedAt    time.Time         `json:"-" validate:"required" db:"updated_at"`
+	Status       scanner.NullInt16 `json:"status" validate:"required" db:"status"`
+	Major        string            `json:"major" validate:"required" db:"major"`
 }
 
 // List of Students
