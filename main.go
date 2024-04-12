@@ -46,18 +46,18 @@ func main() {
 
 	getRouter := serveMux.Methods("GET").Subrouter()
 	getRouter.HandleFunc("/", studentsHandler.GetStudents)
-	getRouter.HandleFunc("/{id:[0-9]+}", studentsHandler.GetStudent)
+	getRouter.HandleFunc("/{id}", studentsHandler.GetStudent)
 
 	postRouter := serveMux.Methods("POST").Subrouter()
 	postRouter.HandleFunc("/", studentsHandler.AddStudent)
 	postRouter.Use(studentsHandler.MiddlewareValidateStudent)
 
 	putRouter := serveMux.Methods("PUT").Subrouter()
-	putRouter.HandleFunc("/{id:[0-9]+}", studentsHandler.UpdateStudent)
+	putRouter.HandleFunc("/{id}", studentsHandler.UpdateStudent)
 	putRouter.Use(studentsHandler.MiddlewareValidateStudent)
 
 	deleteRouter := serveMux.Methods("DELETE").Subrouter()
-	deleteRouter.HandleFunc("/{id:[0-9]+}", studentsHandler.DeleteStudent)
+	deleteRouter.HandleFunc("/{id}", studentsHandler.DeleteStudent)
 
 	ops := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
 	docsMiddleware := middleware.Redoc(ops, nil)

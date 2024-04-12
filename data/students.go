@@ -3,12 +3,13 @@ package data
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"log"
 	"strconv"
 	"time"
 
+	custom_errors "github.com/Lemm8/CollegeManager/errors"
 	"github.com/Lemm8/CollegeManager/scanner"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5"
@@ -109,20 +110,30 @@ func GetStudents(conn *pgx.Conn, l *log.Logger) Students {
 	return students
 }
 
-func GetStudent(id string) (*Student, error) {
-	foundStudent, _, err := findStudent(id)
+func GetStudent(conn *pgx.Conn, l *log.Logger, id string) (*Student, error) {
+	row, err := conn.Query(context.Background(), `SELECT * FROM student where id=$1`, id)
 	if err != nil {
+		l.Printf("QueryRow Failed: %v\n", err)
 		return nil, err
 	}
-	return foundStudent, nil
+
+	student, err := pgx.CollectExactlyOneRow(row, pgx.RowToStructByName[Student])
+	if err != nil {
+		l.Printf("Collect Row Failed: %v\n", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, custom_errors.ErrorStudentNotFound
+		}
+		if errors.Is(err, pgx.ErrTooManyRows) {
+			return nil, custom_errors.ErrorDuplicatedStudent
+		}
+	}
+	return &student, nil
 }
 
 func AddStudent(student *Student) {
 	student.ID = getNextId()
 	testsStudentList = append(testsStudentList, student)
 }
-
-var ErrorStudentNotFound = fmt.Errorf("Student Not Found")
 
 func UpdateStudent(id string, student *Student) error {
 	_, pos, err := findStudent(id)
@@ -151,7 +162,7 @@ func findStudent(id string) (*Student, int, error) {
 			return student, i, nil
 		}
 	}
-	return nil, -1, ErrorStudentNotFound
+	return nil, -1, custom_errors.ErrorStudentNotFound
 }
 
 func getNextId() string {

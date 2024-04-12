@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Lemm8/CollegeManager/data"
+	"github.com/Lemm8/CollegeManager/errors"
 	"github.com/gorilla/mux"
 )
 
@@ -35,21 +36,21 @@ func (students *Students) GetStudents(w http.ResponseWriter, r *http.Request) {
 //	500: errorResponse
 func (students *Students) GetStudent(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id, err := vars["id"]
-	if err {
-		http.Error(w, "Unable to convert to id ", http.StatusBadRequest)
+	id, exists := vars["id"]
+	if !exists {
+		http.Error(w, "Student Id not present in the request ", http.StatusBadRequest)
 		return
 	}
 
 	students.l.Println("Handle GET ID Student")
 
-	student, errStudent := data.GetStudent(id)
+	student, errStudent := data.GetStudent(students.conn, students.l, id)
 
-	if errStudent != nil && errStudent == data.ErrorStudentNotFound {
+	if errStudent != nil && errStudent == errors.ErrorStudentNotFound {
 		http.Error(w, "Student Not Found", http.StatusNotFound)
 		return
 	}
-	if errStudent != nil && errStudent != data.ErrorStudentNotFound {
+	if errStudent != nil && errStudent != errors.ErrorStudentNotFound {
 		http.Error(w, "Student Not Found", http.StatusInternalServerError)
 		return
 	}
