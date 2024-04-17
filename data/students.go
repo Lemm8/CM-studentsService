@@ -6,13 +6,15 @@ import (
 	"errors"
 	"io"
 	"log"
-	"strconv"
+	"reflect"
 	"time"
 
 	custom_errors "github.com/Lemm8/CollegeManager/errors"
+	"github.com/Lemm8/CollegeManager/queries"
 	"github.com/Lemm8/CollegeManager/scanner"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // swagger:model
@@ -42,7 +44,7 @@ type Student struct {
 	//
 	// required:true
 	// pattern:DD/MM/YYYY
-	Birthdate scanner.NullTime `json:"birthdate" validate:"required,validBirthdate" db:"birthdate"`
+	Birthdate scanner.NullTime `json:"birthdate" validate:"required" db:"birthdate"`
 	// The email of the student
 	//
 	// required:true
@@ -52,16 +54,16 @@ type Student struct {
 	//
 	// required:true
 	// pattern:numeric only and no more than 15 digits
-	Cellphone    string            `json:"cellphone" validate:"required,max=15" db:"cellphone"`
-	Nationality  string            `json:"nationality" validate:"required" db:"nationality"`
-	GPA          float32           `json:"gpa" validate:"required,gte=0,lte=100" db:"gpa"`
-	TotalCredits int               `json:"totalCredits" validate:"required,gte=0" db:"credits"`
-	Scolarship   string            `json:"scolarship" validate:"required" db:"scolarship"`
-	GraduatedOn  scanner.NullTime  `json:"-" db:"graduated_on"`
-	JoinedOn     time.Time         `json:"-" db:"created_at"`
-	UpdatedAt    time.Time         `json:"-" validate:"required" db:"updated_at"`
-	Status       scanner.NullInt16 `json:"status" validate:"required" db:"status"`
-	Major        string            `json:"major" validate:"required" db:"major"`
+	Cellphone    string           `json:"cellphone" validate:"required,max=15" db:"cellphone"`
+	Nationality  string           `json:"nationality" validate:"required" db:"nationality"`
+	GPA          float32          `json:"gpa" validate:"required,gte=0,lte=100" db:"gpa"`
+	TotalCredits int16            `json:"totalCredits" validate:"required,gte=0" db:"credits"`
+	Scolarship   float32          `json:"scolarship" validate:"required" db:"scolarship"`
+	GraduatedOn  scanner.NullTime `json:"-" db:"graduated_on"`
+	JoinedOn     time.Time        `json:"-" db:"created_at"`
+	UpdatedAt    time.Time        `json:"-" db:"updated_at"`
+	Status       int16            `json:"status" validate:"required" db:"status"`
+	Major        string           `json:"major" validate:"required" db:"major"`
 }
 
 // List of Students
@@ -81,24 +83,18 @@ func (student *Student) ToJSON(w io.Writer) error {
 
 func (student *Student) Validate() error {
 	validate := validator.New()
-	validate.RegisterValidation("validBirthdate", validBirthdate)
 	return validate.Struct(student)
 }
 
-func validBirthdate(fl validator.FieldLevel) bool {
-	_, err := time.Parse("01/02/2006", fl.Field().String())
-	return err == nil
-}
-
 // Pass content of the to JSON
-func (student *Student) FromJSON(r io.Reader) error {
+func (student *Student) FromJSON(l *log.Logger, r io.ReadCloser) error {
 	decoder := json.NewDecoder(r)
 	return decoder.Decode(student)
 }
 
-func GetStudents(conn *pgx.Conn, l *log.Logger) Students {
+func GetStudents(conn *pgxpool.Pool, l *log.Logger) Students {
 
-	rows, err := conn.Query(context.Background(), `SELECT * FROM student`)
+	rows, err := conn.Query(context.Background(), queries.ListStudents)
 	if err != nil {
 		l.Printf("QueryRow failed: %v\n", err)
 	}
@@ -110,8 +106,8 @@ func GetStudents(conn *pgx.Conn, l *log.Logger) Students {
 	return students
 }
 
-func GetStudent(conn *pgx.Conn, l *log.Logger, id string) (*Student, error) {
-	row, err := conn.Query(context.Background(), `SELECT * FROM student where id=$1`, id)
+func GetStudent(conn *pgxpool.Pool, l *log.Logger, id string) (*Student, error) {
+	row, err := conn.Query(context.Background(), queries.GetStudentById, id)
 	if err != nil {
 		l.Printf("QueryRow Failed: %v\n", err)
 		return nil, err
@@ -130,9 +126,22 @@ func GetStudent(conn *pgx.Conn, l *log.Logger, id string) (*Student, error) {
 	return &student, nil
 }
 
-func AddStudent(student *Student) {
-	student.ID = getNextId()
-	testsStudentList = append(testsStudentList, student)
+func AddStudent(conn *pgxpool.Pool, l *log.Logger, student *Student) error {
+	var err error
+	if reflect.TypeOf(student.MiddleName) == nil {
+		_, err = conn.Exec(context.Background(), queries.InsertStudentNoMiddleName, student.ID, student.Name, student.FirstLastName, student.SecondLastName,
+			student.Birthdate.Time, student.Email, student.Cellphone, student.Nationality, student.GPA, student.TotalCredits, student.Scolarship, student.Status, student.Major)
+	} else {
+		_, err = conn.Exec(context.Background(), queries.InsertStudentMiddleName, student.ID, student.Name, student.MiddleName.String, student.FirstLastName, student.SecondLastName,
+			student.Birthdate.Time, student.Email, student.Cellphone, student.Nationality, student.GPA, student.TotalCredits, student.Scolarship, student.Status, student.Major)
+	}
+
+	if err != nil {
+		l.Printf("Student: %v", *student)
+		l.Printf("Error inserting student: %v\n", err)
+		return err
+	}
+	return nil
 }
 
 func UpdateStudent(id string, student *Student) error {
@@ -163,10 +172,6 @@ func findStudent(id string) (*Student, int, error) {
 		}
 	}
 	return nil, -1, custom_errors.ErrorStudentNotFound
-}
-
-func getNextId() string {
-	return strconv.Itoa(len(testsStudentList) + 1)
 }
 
 // Hardcoded list of students

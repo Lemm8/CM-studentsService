@@ -25,7 +25,7 @@ func main() {
 		l.Println("Error: ", err)
 	}
 
-	defer conn.Close(context.Background())
+	defer conn.Close()
 
 	var greeting string
 	err = conn.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)

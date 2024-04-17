@@ -23,16 +23,16 @@ import (
 	"net/http"
 
 	"github.com/Lemm8/CollegeManager/data"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Students struct {
 	l    *log.Logger
-	conn *pgx.Conn
+	conn *pgxpool.Pool
 }
 
 // Create a students handler with a given logger (dependency injection)
-func NewStudentsHandler(l *log.Logger, conn *pgx.Conn) *Students {
+func NewStudentsHandler(l *log.Logger, conn *pgxpool.Pool) *Students {
 	return &Students{l, conn}
 }
 
@@ -42,8 +42,7 @@ func (students Students) MiddlewareValidateStudent(next http.Handler) http.Handl
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		student := data.Student{}
 
-		// Deserialize student from body
-		err := student.FromJSON(r.Body)
+		err := student.FromJSON(students.l, r.Body)
 		if err != nil {
 			students.l.Println("[ERROR] deserializing student", err)
 			http.Error(w, "Error reading student", http.StatusBadRequest)
