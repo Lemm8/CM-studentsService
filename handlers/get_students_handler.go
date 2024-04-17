@@ -57,6 +57,8 @@ func (students *Students) GetStudent(w http.ResponseWriter, r *http.Request) {
 
 	errStudent = student.ToJSON(w)
 	if errStudent != nil {
+		students.l.Printf("Student: %v", student)
+		students.l.Printf("Error Marshalling Student: %v", errStudent)
 		http.Error(w, "Unable to Marshal JSON", http.StatusInternalServerError)
 	}
 }

@@ -16,6 +16,6 @@ func (students *Students) AddStudent(w http.ResponseWriter, r *http.Request) {
 	students.l.Println("Handle POST Students")
 
 	student := r.Context().Value(KeyStudent{}).(data.Student)
-	data.AddStudent(&student)
+	data.AddStudent(students.conn, students.l, &student)
 	w.WriteHeader(http.StatusCreated)
 }
