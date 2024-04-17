@@ -144,15 +144,12 @@ func AddStudent(conn *pgxpool.Pool, l *log.Logger, student *Student) error {
 	return nil
 }
 
-func UpdateStudent(id string, student *Student) error {
-	_, pos, err := findStudent(id)
+func UpdateStudent(conn *pgxpool.Pool, l *log.Logger, id string, student *Student) error {
+	_, err := conn.Exec(context.Background(), queries.UpdateStudent, student.Name, student.MiddleName.String, student.FirstLastName, student.SecondLastName, student.Birthdate.Time,
+		student.Email, student.Cellphone, student.Nationality, student.GPA, student.TotalCredits, student.Scolarship, student.Status, student.Major, student.ID)
 	if err != nil {
 		return err
 	}
-
-	student.ID = id
-	testsStudentList[pos] = student
-
 	return nil
 }
 

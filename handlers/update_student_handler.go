@@ -26,7 +26,7 @@ func (students *Students) UpdateStudent(w http.ResponseWriter, r *http.Request) 
 	students.l.Println("Handle PUT Students")
 	student := r.Context().Value(KeyStudent{}).(data.Student)
 
-	errStudent := data.UpdateStudent(id, &student)
+	errStudent := data.UpdateStudent(students.conn, students.l, id, &student)
 	if errStudent != nil && errStudent == errors.ErrorStudentNotFound {
 		http.Error(w, "Student Not Found", http.StatusNotFound)
 		return
