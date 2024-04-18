@@ -137,100 +137,38 @@ func AddStudent(conn *pgxpool.Pool, l *log.Logger, student *Student) error {
 	}
 
 	if err != nil {
-		l.Printf("Student: %v", *student)
 		l.Printf("Error inserting student: %v\n", err)
 		return err
 	}
+	l.Printf("Student inserted {%v}: \n", student.ID)
 	return nil
 }
 
 func UpdateStudent(conn *pgxpool.Pool, l *log.Logger, id string, student *Student) error {
-	_, err := conn.Exec(context.Background(), queries.UpdateStudent, student.Name, student.MiddleName.String, student.FirstLastName, student.SecondLastName, student.Birthdate.Time,
-		student.Email, student.Cellphone, student.Nationality, student.GPA, student.TotalCredits, student.Scolarship, student.Status, student.Major, student.ID)
+	resp, err := conn.Exec(context.Background(), queries.UpdateStudent, student.Name, student.MiddleName.String, student.FirstLastName, student.SecondLastName, student.Birthdate.Time,
+		student.Email, student.Cellphone, student.Nationality, student.GPA, student.TotalCredits, student.Scolarship, student.Status, student.Major, id)
 	if err != nil {
+		l.Printf("Error updating student: %s\n", err)
 		return err
 	}
+	if resp.String() == "UPDATE 0" {
+		l.Printf("Error deleting student - Student with id %v not Found\n", id)
+		return custom_errors.ErrorStudentNotFound
+	}
+	l.Printf("Student updated with ID {%v}\n", id)
 	return nil
 }
 
-func DeleteStudent(id string) error {
-	_, pos, err := findStudent(id)
+func DeleteStudent(conn *pgxpool.Pool, l *log.Logger, id string) error {
+	resp, err := conn.Exec(context.Background(), queries.DeleteStudent, id)
 	if err != nil {
+		l.Printf("Error deleting student: %s\n", err)
 		return err
 	}
-	testsStudentList = append(testsStudentList[:pos], testsStudentList[pos+1:]...)
-	return nil
-}
-
-func findStudent(id string) (*Student, int, error) {
-	for i, student := range testsStudentList {
-		if student.ID == id {
-			return student, i, nil
-		}
+	if resp.String() == "DELETE 0" {
+		l.Printf("Error deleting student - Student with id %v not Found\n", id)
+		return custom_errors.ErrorStudentNotFound
 	}
-	return nil, -1, custom_errors.ErrorStudentNotFound
-}
-
-// Hardcoded list of students
-var testsStudentList = []*Student{
-	{
-		// 	ID:             "1",
-		// 	Name:           "Name1",
-		// 	MiddleName:     "MiddleName1",
-		// 	FirstLastName:  "FirstLastName1",
-		// 	SecondLastName: "SecondLastName1",
-		// 	Birthdate:      "10/10/1999",
-		// 	Email:        "email1@test.com",
-		// 	Cellphone:    "6121112113",
-		// 	GPA:          4.5,
-		// 	TotalCredits: 10,
-		// 	JoinedOn:     "June 2018",
-		// 	GraduatedOn:  "",
-		// 	Status: true,
-		// },
-		// {
-		// 	ID:             "2",
-		// 	Name:           "Name2",
-		// 	MiddleName:     "MiddleName2",
-		// 	FirstLastName:  "FirstLastName2",
-		// 	SecondLastName: "FirstLastName2",
-		// 	Birthdate:      "08/11/2001",
-		// 	Email:        "email2@test.com",
-		// 	Cellphone:    "6465910237",
-		// 	GPA:          4.5,
-		// 	TotalCredits: 10,
-		// 	JoinedOn:     "June 2018",
-		// 	GraduatedOn:  "",
-		// 	Status: true,
-		// },
-		// {
-		// 	ID:             "3",
-		// 	Name:           "Name3",
-		// 	MiddleName:     "MiddleName3",
-		// 	FirstLastName:  "FirstLastName3",
-		// 	SecondLastName: "FirstLastName3",
-		// 	Birthdate:      "01/03/2003",
-		// 	Email:        "email3@test.com",
-		// 	Cellphone:    "6123947581",
-		// 	GPA:          4.5,
-		// 	TotalCredits: 10,
-		// 	JoinedOn:     "June 2018",
-		// 	GraduatedOn:  "",
-		// 	Status: true,
-		// },
-		// {
-		// 	ID:             "4",
-		// 	Name:           "Name4",
-		// 	MiddleName:     "MiddleName4",
-		// 	FirstLastName:  "FirstLastName4",
-		// 	SecondLastName: "FirstLastName4",
-		// 	Birthdate:      "11/10/2000",
-		// 	Email:        "email4@test.com",
-		// 	Cellphone:    "61239405729",
-		// 	GPA:          4.5,
-		// 	TotalCredits: 10,
-		// 	JoinedOn:     "June 2018",
-		// 	GraduatedOn:  "",
-		// 	Status: true,
-	},
+	l.Printf("Student deleted with id {%s} \n", id)
+	return nil
 }

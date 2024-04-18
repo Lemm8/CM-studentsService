@@ -25,7 +25,7 @@ func (students *Students) DeleteStudent(w http.ResponseWriter, r *http.Request) 
 
 	students.l.Println("Handle DELETE Student")
 
-	errNotFound := data.DeleteStudent(id)
+	errNotFound := data.DeleteStudent(students.conn, students.l, id)
 	if errNotFound == errors.ErrorStudentNotFound {
 		http.Error(w, "Student Not Found", http.StatusNotFound)
 		return
